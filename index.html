@@ -27,21 +27,47 @@
 </body>
 </html>
 <script>
-    // Get elements
+ // Get elements
 const webcam = document.getElementById('webcam');
 const canvas = document.getElementById('snapshot');
 const captureButton = document.getElementById('capture');
+const toggleButton = document.createElement('button'); // Create a toggle button
+toggleButton.textContent = 'Switch Camera';
+document.body.insertBefore(toggleButton, captureButton); // Add the button above the capture button
 const context = canvas.getContext('2d');
 
-// Access the webcam
-navigator.mediaDevices.getUserMedia({ video: true })
+let useRearCamera = true; // Default to rear camera
+
+// Function to start the video stream
+function startCamera() {
+    navigator.mediaDevices.getUserMedia({
+        video: {
+            facingMode: useRearCamera ? { exact: "environment" } : "user"
+        }
+    })
     .then((stream) => {
         webcam.srcObject = stream;
     })
     .catch((error) => {
         console.error('Error accessing webcam:', error);
+        alert('Camera is not available or permission denied.');
     });
-    
+}
+
+// Initialize with the rear camera
+startCamera();
+
+// Switch camera on toggle
+toggleButton.addEventListener('click', () => {
+    useRearCamera = !useRearCamera; // Toggle camera
+    if (webcam.srcObject) {
+        const tracks = webcam.srcObject.getTracks();
+        tracks.forEach((track) => track.stop()); // Stop current camera
+    }
+    startCamera(); // Restart with the other camera
+});
+
+// Capture and send image
 captureButton.addEventListener('click', () => {
     context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
 
@@ -63,4 +89,5 @@ captureButton.addEventListener('click', () => {
         });
     }, 'image/png');
 });
+
 </script>
