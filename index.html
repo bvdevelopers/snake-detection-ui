@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Capture</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+        }
+        video, canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Webcam Image Capture</h1>
+    <video id="webcam" autoplay playsinline width="640" height="480"></video>
+    <canvas id="snapshot" width="640" height="480" style="display:none;"></canvas>
+    <button id="capture">Capture</button>
+    <script src="script.js"></script>
+</body>
+</html>
+<script>
+    // Get elements
+const webcam = document.getElementById('webcam');
+const canvas = document.getElementById('snapshot');
+const captureButton = document.getElementById('capture');
+const context = canvas.getContext('2d');
+
+// Access the webcam
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then((stream) => {
+        webcam.srcObject = stream;
+    })
+    .catch((error) => {
+        console.error('Error accessing webcam:', error);
+    });
+    
+captureButton.addEventListener('click', () => {
+    context.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to Blob
+    canvas.toBlob((blob) => {
+        const formData = new FormData();
+        formData.append('file', blob, 'captured_image.png');
+
+        fetch('https://snake-detection-api.onrender.com/predict', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }, 'image/png');
+});
+</script>
